@@ -1,0 +1,19 @@
+- hosts: webservers
+  become: yes
+  tasks:
+    - name: INSTALL NGINX
+      apt: name=nginx state=latest
+      notify:
+        - nginx systemd
+    - name: PING NGINX
+      uri:
+        url: http://{{ ansible_host }}/
+        method: GET
+ 
+ 
+  handlers:
+    - name: nginx systemd
+      systemd:
+        name: nginx
+        enabled: yes
+        state: started 
