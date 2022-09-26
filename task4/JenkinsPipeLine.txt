@@ -1,0 +1,49 @@
+def address = "0.0.0.0"
+
+pipeline 
+
+{
+    agent any
+
+    stages 
+    {
+        stage('Prequisites') 
+        {
+            steps 
+            {
+                echo "Let's install some important stuff"
+                sh "docker run --rm -d -p 123:123/udp cturra/ntp"
+            }
+        }
+        stage('Testing') 
+        {
+            steps 
+            {
+                echo "Let's check if the docker is started"
+                sh 'docker ps'
+                sh "netstat -tulpn | grep 123"
+            }
+        }
+        stage('Operation') 
+        {
+            steps 
+            {
+                script
+                {
+                    sh "ip addr show docker0 | grep -Po 'inet \\K[\\d.]+' > /var/tmp/address.txt"
+                    address = readFile(file: "/var/tmp/address.txt")
+                }
+                
+                echo "${address}"
+                
+                echo "Let's work!"
+                sh "date"
+                timeout(time: 100, unit: 'SECONDS')
+                {
+                    sh "ntpdate -q ${address}"
+                }
+                
+            }
+        }
+    }
+}
